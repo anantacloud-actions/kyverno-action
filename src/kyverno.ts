@@ -42,9 +42,7 @@ export async function runKyverno(
     inputs.policies,
     "--resource",
     resources,
-    "--policy-report",
-    "-o",
-    "json"
+    "--policy-report"
   ];
 
   if (
@@ -61,15 +59,17 @@ export async function runKyverno(
   console.log(
     "═══════════════════════════════════════"
   );
+
   console.log(
-    "🛡️  KYVERNO GUARDIAN VALIDATION"
+    "🛡️ KYVERNO GUARDIAN VALIDATION"
   );
+
   console.log(
     "═══════════════════════════════════════"
   );
 
   console.log(
-    `📂 Policies: ${inputs.policies}`
+    `📂 Policies : ${inputs.policies}`
   );
 
   console.log(
@@ -77,7 +77,7 @@ export async function runKyverno(
   );
 
   console.log(
-    `⚔️ Severity Filter: ${inputs.severity}`
+    `🚨 Severity : ${inputs.severity}`
   );
 
   console.log("");
@@ -123,70 +123,46 @@ export async function runKyverno(
     console.error(err);
   }
 
-  let violations = 0;
-
-  let parsedResults: any[] = [];
-
-  try {
-
-    const parsed =
-      JSON.parse(output);
-
-    parsedResults =
-      parsed.results || [];
-
-    violations =
-      parsedResults.filter(
-        (r: any) =>
-          r.result === "fail"
-      ).length;
-
-  } catch (err) {
-
-    console.log(
-      "⚠️ Failed to parse Kyverno JSON output"
-    );
-
-    violations =
-      (
-        output.match(
-          /result:\s+fail/gi
-        ) || []
-      ).length;
-  }
+  const violations =
+    (
+      output.match(
+        /result:\s+fail/gi
+      ) || []
+    ).length;
 
   console.log("");
+
   console.log(
     "═══════════════════════════════════════"
   );
+
   console.log(
     "📊 VALIDATION SUMMARY"
   );
+
   console.log(
     "═══════════════════════════════════════"
   );
 
   console.log(
-    `📌 Total Violations: ${violations}`
+    `📌 Violations : ${violations}`
   );
 
   console.log(
-    `🚦 Status: ${
-      violations > 0
-        ? "❌ FAILED"
-        : "✅ PASSED"
-    }`
+`🚦 Status     : ${
+  violations > 0
+    ? "❌ FAILED"
+    : "✅ PASSED"
+}`
   );
 
   console.log(
-    `📤 Exit Code: ${exitCode}`
+    `📤 Exit Code : ${exitCode}`
   );
 
   console.log("");
 
-  if (
-    parsedResults.length > 0
-  ) {
+  if (violations > 0) {
 
     console.log(
       "═══════════════════════════════════════"
@@ -200,68 +176,47 @@ export async function runKyverno(
       "═══════════════════════════════════════"
     );
 
-    parsedResults.forEach(
-      (
-        result: any,
-        index: number
-      ) => {
+    const lines =
+      output.split("\n");
 
-        const icon =
-          result.result === "fail"
-            ? "❌"
-            : "✅";
+    let currentBlock: string[] = [];
+
+    for (
+      const line of lines
+    ) {
+
+      if (
+        line.includes(
+          "result: fail"
+        )
+      ) {
+
+        currentBlock.push(line);
 
         console.log("");
 
-        console.log(
-`${icon} Violation #${index + 1}`
-        );
-
-        console.log(
-`📜 Policy: ${
-  result.policy ||
-  "unknown"
-}`
-        );
-
-        console.log(
-`📏 Rule: ${
-  result.rule ||
-  "unknown"
-}`
-        );
-
-        console.log(
-`📦 Resource: ${
-  result.resources?.[0]
-    ?.kind || "unknown"
-} / ${
-  result.resources?.[0]
-    ?.name || "unknown"
-}`
-        );
-
-        console.log(
-`📝 Message: ${
-  result.message ||
-  "No message"
-}`
-        );
-
-        console.log(
-`🚨 Result: ${
-  result.result
-}`
+        currentBlock.forEach(
+          (l) =>
+            console.log(
+              `   ${l}`
+            )
         );
 
         console.log(
           "────────────────────────────"
         );
+
+        currentBlock = [];
+
+      } else {
+
+        currentBlock.push(line);
       }
-    );
+    }
   }
 
   console.log("");
+
   console.log(
     "═══════════════════════════════════════"
   );
@@ -279,13 +234,11 @@ export async function runKyverno(
   console.log("");
 
   return {
-
     failed:
       violations > 0,
 
     violations,
     output,
-    parsedResults,
     exitCode
   };
 }

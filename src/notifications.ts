@@ -4,6 +4,7 @@ import { inputs } from "./inputs";
 export async function sendNotifications(
   result: any
 ) {
+
   const shouldNotify =
     inputs.notifyOn ===
       "always" ||
@@ -21,25 +22,32 @@ export async function sendNotifications(
     );
 
   if (!shouldNotify) {
+
+    console.log(
+      "🔕 Notifications skipped"
+    );
+
     return;
   }
 
   const message = {
+
     text:
 `🛡️ Kyverno Guardian Scan Completed
 
-Status:
+🚦 Status:
 ${result.failed ? "❌ FAILED" : "✅ PASSED"}
 
-Violations:
+📌 Violations:
 ${result.violations}
 
-Powered by Kyverno Guardian ⚡`
+⚡ Powered by Kyverno Guardian`
   };
 
   if (
     inputs.slackWebhook
   ) {
+
     console.log(
       "💬 Sending Slack notification"
     );
@@ -48,11 +56,16 @@ Powered by Kyverno Guardian ⚡`
       inputs.slackWebhook,
       message
     );
+
+    console.log(
+      "✅ Slack notification sent"
+    );
   }
 
   if (
     inputs.teamsWebhook
   ) {
+
     console.log(
       "💬 Sending Teams notification"
     );
@@ -61,11 +74,16 @@ Powered by Kyverno Guardian ⚡`
       inputs.teamsWebhook,
       message
     );
+
+    console.log(
+      "✅ Teams notification sent"
+    );
   }
 
   if (
     inputs.gchatWebhook
   ) {
+
     console.log(
       "💬 Sending Google Chat notification"
     );
@@ -73,6 +91,21 @@ Powered by Kyverno Guardian ⚡`
     await axios.post(
       inputs.gchatWebhook,
       message
+    );
+
+    console.log(
+      "✅ Google Chat notification sent"
+    );
+  }
+
+  if (
+    !inputs.slackWebhook &&
+    !inputs.teamsWebhook &&
+    !inputs.gchatWebhook
+  ) {
+
+    console.log(
+      "🔕 No notification webhooks configured"
     );
   }
 }

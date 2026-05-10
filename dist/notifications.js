@@ -16,29 +16,38 @@ async function sendNotifications(result) {
             "success" &&
             !result.failed);
     if (!shouldNotify) {
+        console.log("🔕 Notifications skipped");
         return;
     }
     const message = {
         text: `🛡️ Kyverno Guardian Scan Completed
 
-Status:
+🚦 Status:
 ${result.failed ? "❌ FAILED" : "✅ PASSED"}
 
-Violations:
+📌 Violations:
 ${result.violations}
 
-Powered by Kyverno Guardian ⚡`
+⚡ Powered by Kyverno Guardian`
     };
     if (inputs_1.inputs.slackWebhook) {
         console.log("💬 Sending Slack notification");
         await axios_1.default.post(inputs_1.inputs.slackWebhook, message);
+        console.log("✅ Slack notification sent");
     }
     if (inputs_1.inputs.teamsWebhook) {
         console.log("💬 Sending Teams notification");
         await axios_1.default.post(inputs_1.inputs.teamsWebhook, message);
+        console.log("✅ Teams notification sent");
     }
     if (inputs_1.inputs.gchatWebhook) {
         console.log("💬 Sending Google Chat notification");
         await axios_1.default.post(inputs_1.inputs.gchatWebhook, message);
+        console.log("✅ Google Chat notification sent");
+    }
+    if (!inputs_1.inputs.slackWebhook &&
+        !inputs_1.inputs.teamsWebhook &&
+        !inputs_1.inputs.gchatWebhook) {
+        console.log("🔕 No notification webhooks configured");
     }
 }
