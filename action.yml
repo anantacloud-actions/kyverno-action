@@ -68,6 +68,10 @@ inputs:
     description: "Fail workflow on policy violations"
     required: false
     default: "true"
+  verbose:
+    description: "Enable verbose logging"
+    required: false
+    default: "false"
 
 outputs:
   violations:
