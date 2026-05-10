@@ -64,6 +64,10 @@ inputs:
     description: "GitHub token for PR comments and API access"
     required: false
     default: ${{ github.token }}
+  fail-on-violation:
+    description: "Fail workflow on policy violations"
+    required: false
+    default: "true"
 
 outputs:
   violations:
