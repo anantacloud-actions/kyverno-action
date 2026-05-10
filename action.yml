@@ -1,0 +1,64 @@
+name: "Kyverno Policy Validator"
+description: "Validate Kubernetes manifests using Kyverno policies with rich GitHub annotations and security reporting."
+author: "Ananta Cloud"
+
+branding:
+  icon: "shield"
+  color: "blue"
+
+inputs:
+  policies:
+    description: "Path to Kyverno policies"
+    required: true
+  resources:
+    description: "Path to Kubernetes manifests"
+    required: true
+  namespace:
+    description: "Kubernetes namespace"
+    required: false
+    default: "default"
+  cluster:
+    description: "Enable cluster mode"
+    required: false
+    default: "false"
+  fail-on-violation:
+    description: "Fail workflow on policy violation"
+    required: false
+    default: "true"
+  output-format:
+    description: "Output format: table,json,sarif"
+    required: false
+    default: "table"
+  verbose:
+    description: "Enable verbose logging"
+    required: false
+    default: "false"
+  kyverno-version:
+    description: "Kyverno CLI version"
+    required: false
+    default: "v1.15.0"
+  policy-report:
+    description: "Generate policy report"
+    required: false
+    default: "true"
+  sarif-file:
+    description: "SARIF output file"
+    required: false
+    default: "results.sarif"
+  slack-webhook:
+    description: "Slack webhook URL"
+    required: false
+  teams-webhook:
+    description: "Teams webhook URL"
+    required: false
+  gchat-webhook:
+    description: "Google Chat webhook URL"
+    required: false
+
+outputs:
+  violations:
+    description: "Number of violations"
+
+runs:
+  using: "node20"
+  main: "dist/index.js"
