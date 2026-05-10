@@ -41,10 +41,11 @@ const core = __importStar(require("@actions/core"));
 const inputs_1 = require("./inputs");
 async function installKyverno(version) {
     const url = `https://github.com/kyverno/kyverno/releases/download/${version}/kyverno-cli_${version}_linux_x86_64.tar.gz`;
-    console.log(`📥 Installing Kyverno ${version}`);
+    console.log(`📥 Installing Kyverno CLI ${version}`);
     const downloadPath = await tc.downloadTool(url);
     const extractedPath = await tc.extractTar(downloadPath);
     core.addPath(extractedPath);
+    console.log("✅ Kyverno CLI Installed");
 }
 async function runKyverno(resources) {
     let output = "";
@@ -52,13 +53,22 @@ async function runKyverno(resources) {
         "apply",
         inputs_1.inputs.policies,
         "--resource",
-        resources
+        resources,
+        "--policy-report",
+        "-o",
+        "json"
     ];
     if (inputs_1.inputs.policyExceptions) {
         args.push("--exceptions", inputs_1.inputs.policyExceptions);
     }
-    args.push("--policy-report");
-    console.log(`⚔️ Running: kyverno ${args.join(" ")}`);
+    console.log("");
+    console.log("═══════════════════════════════════════");
+    console.log("🛡️  KYVERNO GUARDIAN VALIDATION");
+    console.log("═══════════════════════════════════════");
+    console.log(`📂 Policies: ${inputs_1.inputs.policies}`);
+    console.log(`📦 Resources: ${resources}`);
+    console.log(`⚔️ Severity Filter: ${inputs_1.inputs.severity}`);
+    console.log("");
     let exitCode = 0;
     try {
         exitCode =
@@ -68,26 +78,77 @@ async function runKyverno(resources) {
                     stdout: (data) => {
                         output +=
                             data.toString();
-                        process.stdout.write(data);
                     },
                     stderr: (data) => {
                         output +=
                             data.toString();
-                        process.stderr.write(data);
                     }
                 }
             });
     }
     catch (err) {
-        console.error("Kyverno execution error");
+        console.error("❌ Kyverno execution failed");
         console.error(err);
     }
-    const violations = (output.match(/fail/gi) || []).length;
-    console.log(`📊 Violations detected: ${violations}`);
+    let violations = 0;
+    let parsedResults = [];
+    try {
+        const parsed = JSON.parse(output);
+        parsedResults =
+            parsed.results || [];
+        violations =
+            parsedResults.filter((r) => r.result === "fail").length;
+    }
+    catch (err) {
+        console.log("⚠️ Failed to parse Kyverno JSON output");
+        violations =
+            (output.match(/result:\s+fail/gi) || []).length;
+    }
+    console.log("");
+    console.log("═══════════════════════════════════════");
+    console.log("📊 VALIDATION SUMMARY");
+    console.log("═══════════════════════════════════════");
+    console.log(`📌 Total Violations: ${violations}`);
+    console.log(`🚦 Status: ${violations > 0
+        ? "❌ FAILED"
+        : "✅ PASSED"}`);
+    console.log(`📤 Exit Code: ${exitCode}`);
+    console.log("");
+    if (parsedResults.length > 0) {
+        console.log("═══════════════════════════════════════");
+        console.log("🔍 POLICY VIOLATIONS");
+        console.log("═══════════════════════════════════════");
+        parsedResults.forEach((result, index) => {
+            const icon = result.result === "fail"
+                ? "❌"
+                : "✅";
+            console.log("");
+            console.log(`${icon} Violation #${index + 1}`);
+            console.log(`📜 Policy: ${result.policy ||
+                "unknown"}`);
+            console.log(`📏 Rule: ${result.rule ||
+                "unknown"}`);
+            console.log(`📦 Resource: ${result.resources?.[0]
+                ?.kind || "unknown"} / ${result.resources?.[0]
+                ?.name || "unknown"}`);
+            console.log(`📝 Message: ${result.message ||
+                "No message"}`);
+            console.log(`🚨 Result: ${result.result}`);
+            console.log("────────────────────────────");
+        });
+    }
+    console.log("");
+    console.log("═══════════════════════════════════════");
+    console.log(violations > 0
+        ? "❌ POLICY VIOLATIONS DETECTED"
+        : "✅ ALL POLICIES PASSED");
+    console.log("═══════════════════════════════════════");
+    console.log("");
     return {
         failed: violations > 0,
         violations,
         output,
+        parsedResults,
         exitCode
     };
 }
