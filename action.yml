@@ -8,56 +8,72 @@ branding:
 
 inputs:
   policies:
-    description: "Path to Kyverno policies"
     required: true
+    description: "Path or OCI URI to policies"
   resources:
-    description: "Path to Kubernetes manifests"
     required: true
-  namespace:
-    description: "Kubernetes namespace"
+    description: "Kubernetes manifests path"
+  helm-chart:
     required: false
-    default: "default"
-  cluster:
-    description: "Enable cluster mode"
+    description: "Helm chart path"
+  helm-values:
     required: false
-    default: "false"
-  fail-on-violation:
-    description: "Fail workflow on policy violation"
+    description: "Helm values file"
+  kustomize-path:
     required: false
-    default: "true"
+    description: "Kustomize overlay path"
+  policy-exceptions:
+    required: false
+    description: "Path to policy exceptions"
+  severity:
+    required: false
+    default: "low,medium,high,critical"
+    description: "Severity filter"
   output-format:
-    description: "Output format: table,json,sarif"
     required: false
     default: "table"
-  verbose:
-    description: "Enable verbose logging"
+  sarif:
+    required: false
+    default: "true"
+  junit:
+    required: false
+    default: "true"
+  pr-comment:
+    required: false
+    default: "true"
+  diff-mode:
     required: false
     default: "false"
   kyverno-version:
-    description: "Kyverno CLI version"
     required: false
     default: "v1.15.0"
-  policy-report:
-    description: "Generate policy report"
-    required: false
-    default: "true"
-  sarif-file:
-    description: "SARIF output file"
-    required: false
-    default: "results.sarif"
   slack-webhook:
-    description: "Slack webhook URL"
+    description: "Slack webhook URL for notifications"
     required: false
   teams-webhook:
-    description: "Teams webhook URL"
+    description: "Microsoft Teams webhook URL for notifications"
     required: false
   gchat-webhook:
-    description: "Google Chat webhook URL"
+    description: "Google Chat webhook URL for notifications"
     required: false
+  notify-on:
+    description: "When to send notifications: always, failure, success"
+    required: false
+    default: "failure"
+  github-token:
+    description: "GitHub token for PR comments and API access"
+    required: false
+    default: ${{ github.token }}
 
 outputs:
   violations:
-    description: "Number of violations"
+    description: "Total violations detected"
+  status:
+    description: "Validation status"
+  sarif-report:
+    description: "SARIF report location"
+  junit-report:
+    description: "JUnit report location"
 
 runs:
   using: "node20"

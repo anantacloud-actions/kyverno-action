@@ -1,20 +1,23 @@
 {
   "name": "kyverno-action",
   "version": "1.0.0",
-  "description": "GitHub Action for Kyverno policy validation",
+  "description": "Enterprise-grade Kyverno GitHub Action",
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc && ncc build src/index.ts -o dist",
-    "package": "npm run build",
-    "lint": "eslint . --ext .ts",
-    "test": "jest"
+    "package": "npm run build"
   },
   "dependencies": {
+    "@actions/cache": "^4.0.2",
     "@actions/core": "^1.11.1",
     "@actions/exec": "^1.1.1",
-    "@actions/github": "^6.0.0",
+    "@actions/github": "^8.0.0",
+    "@actions/tool-cache": "^2.0.1",
     "axios": "^1.8.4",
     "chalk": "^5.4.1"
+  },
+  "overrides": {
+    "undici": "^6.23.1"
   },
   "devDependencies": {
     "@types/node": "^22.13.10",
