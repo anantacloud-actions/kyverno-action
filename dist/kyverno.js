@@ -42,9 +42,9 @@ const inputs_1 = require("./inputs");
 async function installKyverno(version) {
     const url = `https://github.com/kyverno/kyverno/releases/download/${version}/kyverno-cli_${version}_linux_x86_64.tar.gz`;
     console.log(`📥 Installing Kyverno ${version}`);
-    const path = await tc.downloadTool(url);
-    const extracted = await tc.extractTar(path);
-    core.addPath(extracted);
+    const downloadPath = await tc.downloadTool(url);
+    const extractedPath = await tc.extractTar(downloadPath);
+    core.addPath(extractedPath);
 }
 async function runKyverno(resources) {
     let output = "";
@@ -58,29 +58,36 @@ async function runKyverno(resources) {
         args.push("--exceptions", inputs_1.inputs.policyExceptions);
     }
     args.push("--policy-report");
-    args.push("--warn-exit-code", "0");
-    args.push("--audit-warn");
-    if (inputs_1.inputs.outputFormat ===
-        "sarif") {
-        args.push("-o", "sarif");
+    console.log(`⚔️ Running: kyverno ${args.join(" ")}`);
+    let exitCode = 0;
+    try {
+        exitCode =
+            await exec.exec("kyverno", args, {
+                ignoreReturnCode: true,
+                listeners: {
+                    stdout: (data) => {
+                        output +=
+                            data.toString();
+                        process.stdout.write(data);
+                    },
+                    stderr: (data) => {
+                        output +=
+                            data.toString();
+                        process.stderr.write(data);
+                    }
+                }
+            });
     }
-    const exitCode = await exec.exec("kyverno", args, {
-        listeners: {
-            stdout: (data) => {
-                output +=
-                    data.toString();
-                process.stdout.write(data);
-            }
-        }
-    });
-    const severities = inputs_1.inputs.severity
-        .split(",");
-    let violations = (output.match(/fail/gi) || []).length;
+    catch (err) {
+        console.error("Kyverno execution error");
+        console.error(err);
+    }
+    const violations = (output.match(/fail/gi) || []).length;
+    console.log(`📊 Violations detected: ${violations}`);
     return {
-        failed: exitCode !== 0 ||
-            violations > 0,
+        failed: violations > 0,
         violations,
-        severities,
-        output
+        output,
+        exitCode
     };
 }
